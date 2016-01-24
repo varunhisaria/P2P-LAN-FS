@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <cstdio>
 #include <string>
+#include <cerrno>
 #define LOCALHOST "127.0.0.1"
 #define LISTENINGPORT 9090
 #define DEBUG true
@@ -31,7 +32,7 @@ class ConnectionManager{
 			// Initialise the variables
 			this->is_tcp = is_tcp;
 			this->listening_port = listening_port;
-			this->ip_address = ip_address;
+			this->self_ip_address = ip_address;
 
 			// Initialise the object
 			this->init();
@@ -53,11 +54,16 @@ class ConnectionManager{
 
 			memset(&server,0,sizeof(server));
 			server.sin_family=AF_INET;
-			server.sin_addr.s_addr=inet_addr(this->ip_address.c_str());
+			server.sin_addr.s_addr=inet_addr(this->self_ip_address.c_str());
 			server.sin_port = this->listening_port;
 
 			// Error handling to be done.
-			bind(this->socket_descriptor, (struct sockaddr*)&server, sizeof(server));
+			if(bind(this->socket_descriptor, (struct sockaddr*)&server, sizeof(server)!=0)){
+				if(DEBUG){
+					cout<<"Error while binding socket to local address";
+					cout<<strerror(errno);
+				}
+			}
 
 			listen(this->socket_descriptor, this->number_of_connections);
 
