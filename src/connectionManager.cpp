@@ -36,6 +36,10 @@ class ConnectionManager{
 
 			// Initialise the object
 			this->init();
+
+			if(DEBUG){
+				cout<<"Socket initialised.\n";
+			}
 		}
 
 		// Initialise a TCP or UDP socket based on the boolean is_tcp
@@ -47,7 +51,7 @@ class ConnectionManager{
 		}
 
 		// Start a server. TCP or UDP dependent on the socket type.
-		void startServer(unsigned int number_of_connections=1){
+		void startServer(unsigned int number_of_connections=SOMAXCONN){
 			// Initialise the number of connections for the server
 			this->number_of_connections = number_of_connections;
 			struct sockaddr_in server;
@@ -55,22 +59,34 @@ class ConnectionManager{
 			memset(&server,0,sizeof(server));
 			server.sin_family=AF_INET;
 			server.sin_addr.s_addr=inet_addr(this->self_ip_address.c_str());
-			server.sin_port = this->listening_port;
+			server.sin_port = htons(this->listening_port);
 
 			// Error handling to be done.
-			if(bind(this->socket_descriptor, (struct sockaddr*)&server, sizeof(server)!=0)){
+			if(bind(this->socket_descriptor, (struct sockaddr*)&server, sizeof(server))!=0){
 				if(DEBUG){
-					cout<<"Error while binding socket to local address";
+					cout<<"Error while binding socket to local address."<<endl;
+					cout<<"Origin : ConnectionManager::startServer()"<<endl;
+					cout<<errno;
 					cout<<strerror(errno);
 				}
 			}
 
-			listen(this->socket_descriptor, this->number_of_connections);
+			if(listen(this->socket_descriptor, this->number_of_connections)!=0){
+					if(DEBUG){
+						cout<<"Error while listening for connections."<<endl;
+						cout<<"Origin : ConnectionManager::startServer()"<<endl;
+						cout<<strerror(errno);
+					}
+				}
 
 			// Debugging information
 			if(DEBUG){
-				cout<<"Server started. Listening for connections.";
+				cout<<"Server started. Waiting for connections.";
+				cout<<"Listening on port :: "<<this->listening_port;
+				cout<<"Number of connections allowed :: "<<this->number_of_connections;
 			}
+
+			fflush(stdout);
 		}
 
 		// Accept an incoming connection. Return the client socket information to the calling function.
@@ -93,8 +109,13 @@ class ConnectionManager{
 			memset(&server,0, sizeof(server));
 			server.sin_family = AF_INET;
 			server.sin_addr.s_addr=inet_addr(this->sending_ip_address.c_str());
-			server.sin_port = this->sending_port;
+			server.sin_port = htons(this->sending_port);
 
+			if(DEBUG){
+				cout<<"Attempting to connect to "<<this->sending_ip_address<<" at port "<<this->sending_port;
+				cout<<"Connection going from "<<this->self_ip_address<<" and port "<<this->listening_port;
+			}
+			fflush(stdout);
 			// Connect to the server. Error handling to be done.
 			connect(socket_descriptor, (struct sockaddr*)&server, sizeof(server));
 		}
