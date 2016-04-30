@@ -24,13 +24,13 @@ void getMD5Test()
 void writeMetaDataTest()
 {
     Utils obj;
-    obj.writeMetaData("main.cpp");
+    obj.writeMetaData("demo.txt");
 }
 
 void readMetaDataTest()
 {
     Utils obj;
-    MetaData metaData = obj.readMetaData("main.cpp");
+    MetaData metaData = obj.readMetaData("demo.txt");
     cout << metaData.fileName << '\n';
     cout << metaData.fileSize << '\n';
     cout << metaData.fileHash << '\n';
